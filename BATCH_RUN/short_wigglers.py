@@ -30,39 +30,40 @@ def wiggler_preprocessor(ener_gev=6.0,e_min=5000.0,e_max=5005.0,file_field="",di
 
     data = numpy.loadtxt("tmp.traj",skiprows=15)
 
-    fig = plt.figure(1)
+    if plot_trajectories > 0:
+        fig = plt.figure(1)
 
-    fig.add_subplot(221)
-    plt.plot(data[:,1],data[:,7])
-    plt.title("Magnetic Field "+file_field)
-    plt.xlabel("Y [m]")
-    plt.ylabel("B [T]")
+        fig.add_subplot(221)
+        plt.plot(data[:,1],data[:,7])
+        plt.title("Magnetic Field "+file_field)
+        plt.xlabel("Y [m]")
+        plt.ylabel("B [T]")
 
-    fig.add_subplot(222)
-    plt.plot(data[:,1],data[:,0])
-    plt.title("Electron trajectory")
-    plt.xlabel("Y [m]")
-    plt.ylabel("X [m]")
+        fig.add_subplot(222)
+        plt.plot(data[:,1],data[:,0])
+        plt.title("Electron trajectory")
+        plt.xlabel("Y [m]")
+        plt.ylabel("X [m]")
 
-    fig.add_subplot(223)
-    plt.plot(data[:,1],data[:,3])
-    plt.title("Electron velocity")
-    plt.xlabel("Y [m]")
-    plt.ylabel("betaX")
+        fig.add_subplot(223)
+        plt.plot(data[:,1],data[:,3])
+        plt.title("Electron velocity")
+        plt.xlabel("Y [m]")
+        plt.ylabel("betaX")
 
-    fig.add_subplot(224)
-    plt.plot(data[:,1],data[:,6])
-    plt.title("Electron curvature")
-    plt.xlabel("Y [m]")
-    plt.ylabel("curvature [m^-1]")
+        fig.add_subplot(224)
+        plt.plot(data[:,1],data[:,6])
+        plt.title("Electron curvature")
+        plt.xlabel("Y [m]")
+        plt.ylabel("curvature [m^-1]")
 
 
 
-    if plot_trajectories:
-        plt.show()
+        if plot_trajectories == 2:
+            plt.show()
 
-    fig.savefig('sw_'+file_field+'.png')
-    plt.close(fig)
+        fig.savefig('GRAPHICS/sw_'+file_field+'.png')
+        plt.close(fig)
 
     srfunc.wiggler_cdf(traj,
                        enerMin=e_min,
@@ -71,7 +72,7 @@ def wiggler_preprocessor(ener_gev=6.0,e_min=5000.0,e_max=5005.0,file_field="",di
                        outFile="xshwig.sha",
                        elliptical=False)
 
-def wiggler_source(ener_gev=6.0,e_min=5000.0,e_max=5005.0,iwrite=1,emittance=0):
+def wiggler_source(ener_gev=6.0,e_min=5000.0,e_max=5005.0,iwrite=0,emittance=0):
 
     beam = Shadow.Beam()
     oe0 = Shadow.Source()
@@ -267,14 +268,24 @@ def focusing_ideal(beam,iwrite=0):
 
 if __name__ == "__main__":
 
-    wigglers =  ["BM","3Pcut","2PAcut","2PBcut","1Pcut","3P","2PA","2PB","1P","0P"] # ["2PAcut"]       #
-    energies =   [5,10,20,40,80]                                                    # [5]              #
-    emittance = 1
+    #
+    # User inputs
+    #
+    wigglers   = ["BM","3Pcut","2PAcut","2PBcut","1Pcut","3P","2PA","2PB","1P","0P"]  #["2PAcut"]       #
+    energies   = [5,10,20,40,80]                                                      #[5]              #
+    use_emittances = [0,1]           #  [0]=No, [1]=Yes, [0,1]=Both
+    #                                                   #
+    write_html_report = 1        # 0=No, 1=HTML report+Latex tables
+    dir_file_latex = "./"        # "/users/srio/Working/rt/ESRF-new-lattice/REPORT-SHORT-WIGGLERS/"
+    write_shadow_begin = 1
 
+    #
     # initialize
-    plot_trajectories = 0
-    txt_all = ""
-    txt_latex = ""
+    #
+    plot_trajectories = write_html_report  # 0=No, 1=png file, 2=png+window
+    if write_html_report:
+        txt_latex = ""
+        txt_all = ""
     plot_index = -1
 
     xrange_1 = [-0.015,0.015]
@@ -282,270 +293,284 @@ if __name__ == "__main__":
     xrange_3 = xrange_1 # [-0.015,0.015]
     yrange_3 = yrange_1 # [-0.01,0.01]
 
-    for root_file in wigglers:
-        if emittance:
-            title0 = "Finite Emittance; magnetic field: %s"%(root_file)
-        else:
-            title0 = "Zero Emittance; magnetic field: %s"%(root_file)
-        txt_all += "\n == %s ==\n\n"%(title0)
+    for use_emittance in use_emittances:
+        for root_file in wigglers:
+            dir_file_field = "../"
+            file_field = "SW_"+root_file+".txt"
 
-        dir_file_field = "../"
-        file_field = "SW_"+root_file+".txt"
-        #plot trajectories
-        txt_all += "\n\n [%s] \n\n"%('sw_'+file_field+'.png')
-
-
-        for energy_kev in energies:
-            # start ENERGY loop HERE #######################
+            if write_html_report:
+                if use_emittance:
+                    title0 = "Finite Emittance; magnetic field: %s"%(root_file)
+                else:
+                    title0 = "Zero Emittance; magnetic field: %s"%(root_file)
+                txt_all += "\n == %s ==\n\n"%(title0)
+                txt_all += "\n\n [%s] \n\n"%('GRAPHICS/sw_'+file_field+'.png')
 
 
-            e_min = energy_kev * 1000.0
-            e_max = e_min + e_min/1000.0 # 0.1%bw
+            for energy_kev in energies:
+                # start ENERGY loop HERE #######################
 
-            if emittance:
-                title = "Finite Emittance; magnetic field: %s; E=%d keV"%(root_file,energy_kev)
-                png_label="_withemitt_"
+                e_min = energy_kev * 1000.0
+                e_max = e_min + e_min/1000.0 # 0.1%bw
+
+
+                if write_html_report:
+                    if use_emittance:
+                        title = "Finite Emittance; magnetic field: %s; E=%d keV"%(root_file,energy_kev)
+                        png_label="_withemitt_"
+                    else:
+                        title = "Zero Emittance; magnetic field: %s; E=%d keV"%(root_file,energy_kev)
+                        png_label="_zeroemitt_"
+                    txt_all += "\n === %s ===\n\n"%(title)
+
+
+                #
+                # source
+                #
+
+                # preprocessor
+                if root_file == "BM":
+                    pass
+                else:
+                    if root_file == "1Pcut":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    elif root_file == "2PAcut":
+                        shift_betax_flag = 1
+                        shift_x_flag     = 1
+                    elif root_file == "2PBcut":
+                        shift_betax_flag = 1
+                        shift_x_flag     = 1
+                    elif root_file == "3Pcut":
+                        shift_betax_flag = 0
+                        shift_x_flag     = 1
+
+                    elif root_file == "0P":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    elif root_file == "1P":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    elif root_file == "2PA":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    elif root_file == "2PB":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    elif root_file == "3P":
+                        shift_betax_flag = 4
+                        shift_x_flag     = 4
+                    else:
+                        raise "Error: root_file not valid"
+
+                    wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
+                                         plot_trajectories=plot_trajectories,
+                                         shift_betax_flag=shift_betax_flag,shift_x_flag=shift_x_flag)
+
+
+                #shadow source
+                if root_file == "BM":
+                    beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+                else:
+                    beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+
+                if write_shadow_begin:
+                    if use_emittance:
+                        tmp = "withemittance"
+                    else:
+                        tmp = "zeroemittance"
+                    beam.write("BEGIN_FILES/begin_%s_%dkeV_%s.dat"%(root_file,energy_kev,tmp))
+
+                if write_html_report:
+                    # plot divergences
+                    subtitle = "Divergence space"
+                    tkt0 = Shadow.ShadowTools.plotxy_gnuplot(beam,4,6,xrange=[-0.003,0.003],yrange=[-250e-6,250e-6],nolost=1,
+                            ref="Yes",nbins=201,ps=1,viewer="ls ",title="Div space; Units: rad; "+subtitle,
+                            calculate_widths=2)
+                    if tkt0["fw25%m_h"] == None: tkt0["fw25%m_h"] = -1e-4
+                    if tkt0["fw25%m_v"] == None: tkt0["fw25%m_v"] = -1e-4
+                    if tkt0["fwhm_h"] == None:   tkt0["fwhm_h"] = -1e-4
+                    if tkt0["fwhm_v"] == None:   tkt0["fwhm_v"] = -1e-4
+                    if tkt0["fw75%m_h"] == None: tkt0["fw75%m_h"] = -1e-4
+                    if tkt0["fw75%m_v"] == None: tkt0["fw75%m_v"] = -1e-4
+
+                    txt_all += "\n ==== %s ====\n\n"%(subtitle)
+                    txt_all += "\n\n"
+                    txt_all += " | FW25M  | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fw25%m_h"],1e6*tkt0["fw25%m_v"])
+                    txt_all += " | FWHM   | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fwhm_h"],  1e6*tkt0["fwhm_v"])
+                    txt_all += " | FW75M  | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fw75%m_h"],1e6*tkt0["fw75%m_v"])
+
+                    plot_index += 1
+                    file_png = "GRAPHICS/sw%s%0000d.png"%(png_label,plot_index)
+                    os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
+                    txt_all += "\n\n [%s] \n\n"%(file_png)
+
+                    # plot top view
+                    subtitle = "Emission intensity - electron trajectory (top view)"
+                    txt_all += "\n ==== %s ====\n\n"%(subtitle)
+                    txt_all += "\n\n"
+                    Shadow.ShadowTools.plotxy_gnuplot(beam,2,1,nbins=201,ps=1,viewer="ls ",title="Units=cm; %s"%subtitle)
+
+
+                    plot_index += 1
+                    file_png = "GRAPHICS/sw%s%0000d.png"%(png_label,plot_index)
+                    os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
+                    txt_all += "\n\n [%s] \n\n"%(file_png)
+
+
+                #
+                # ideal focusing
+                #
+
+                beam,oe1 = focusing_ideal(beam)
+
+                if write_html_report:
+                    subtitle = "Ideal 1:1 focusing"
+
+                    # plot divergences
+                    # xrange=[-500e-4/4,500e-4/4],yrange=[-500e-4/16,500e-4/16]
+                    tkt1 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3,xrange=xrange_1, yrange=yrange_1,
+                                                             nolost=1,ref="Yes",nbins=201,ps=1,viewer="ls ",
+                                                             title="Real space; Units=cm; %s"%subtitle,
+                                                             calculate_widths=2)
+                    if tkt1["fw25%m_h"] == None: tkt1["fw25%m_h"] = -1e-4
+                    if tkt1["fw25%m_v"] == None: tkt1["fw25%m_v"] = -1e-4
+                    if tkt1["fwhm_h"] == None:   tkt1["fwhm_h"] = -1e-4
+                    if tkt1["fwhm_v"] == None:   tkt1["fwhm_v"] = -1e-4
+                    if tkt1["fw75%m_h"] == None: tkt1["fw75%m_h"] = -1e-4
+                    if tkt1["fw75%m_v"] == None: tkt1["fw75%m_v"] = -1e-4
+
+
+                    txt_all += "\n ==== %s ====\n\n"%(subtitle)
+                    txt_all += "\n\n"
+                    txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fw25%m_h"],1e4*tkt1["fw25%m_v"])
+                    txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fwhm_h"],  1e4*tkt1["fwhm_v"])
+                    txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fw75%m_h"],1e4*tkt1["fw75%m_v"])
+
+                    plot_index += 1
+                    file_png = "GRAPHICS/sw%s%0000d.png"%(png_label,plot_index)
+                    os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
+                    txt_all += "\n\n [%s] \n\n"%(file_png)
+
+
+                #
+                # 1:1 focusing
+                #
+                beam = None
+                if root_file == "BM":
+                    beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+                else:
+                    beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+
+
+                beam,oe1 = focusing_mirror(beam,foc="1:1",grazing_theta_mrad=3.0)
+
+                if write_html_report:
+                    subtitle = "Toroid 1:1 focusing"
+
+                    tkt2 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3,xrange=xrange_1, yrange=yrange_1,
+                                                             nolost=1,ref="Yes",nbins=301,ps=1,viewer="ls ",
+                                                             title="Real space; Units=cm; %s"%subtitle,
+                                                             calculate_widths=2)
+                    if tkt2["fw25%m_h"] == None: tkt2["fw25%m_h"] = -1e-4
+                    if tkt2["fw25%m_v"] == None: tkt2["fw25%m_v"] = -1e-4
+                    if tkt2["fwhm_h"]   == None: tkt2["fwhm_h"] = -1e-4
+                    if tkt2["fwhm_v"]   == None: tkt2["fwhm_v"] = -1e-4
+                    if tkt2["fw75%m_h"] == None: tkt2["fw75%m_h"] = -1e-4
+                    if tkt2["fw75%m_v"] == None: tkt2["fw75%m_v"] = -1e-4
+
+                    txt_all += "\n ==== %s ====\n\n"%(subtitle)
+                    txt_all += "\n\n"
+                    txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fw25%m_h"],1e4*tkt2["fw25%m_v"])
+                    txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fwhm_h"],  1e4*tkt2["fwhm_v"])
+                    txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fw75%m_h"],1e4*tkt2["fw75%m_v"])
+
+                    plot_index += 1
+                    file_png = "GRAPHICS/sw%s%0000d.png"%(png_label,plot_index)
+                    os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
+                    txt_all += "\n\n [%s] \n\n"%(file_png)
+                #
+
+                #
+                # 3:1 focusing
+                #
+                beam = None
+                if root_file == "BM":
+                    beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+                else:
+                    beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=use_emittance)
+                beam,oe1 = focusing_mirror(beam,foc="3:1",grazing_theta_mrad=3.0)
+
+                if write_html_report:
+                    subtitle = "Ellipsoid 3:1 focusing"
+                    # xrange=[-500e-4/2,500e-4/2],yrange=[-500e-4/4,500e-4/4]
+                    tkt3 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3, xrange=xrange_3, yrange=yrange_3,
+                                                             nolost=1,ref="Yes",nbins=151,ps=1,viewer="ls ",
+                                                             title="Real space; Units=cm; %s"%subtitle,
+                                                             calculate_widths=2)
+
+                    if tkt3["fw25%m_h"] == None: tkt3["fw25%m_h"] = -1e-4
+                    if tkt3["fw25%m_v"] == None: tkt3["fw25%m_v"] = -1e-4
+                    if tkt3["fwhm_h"] == None:   tkt3["fwhm_h"] = -1e-4
+                    if tkt3["fwhm_v"] == None:   tkt3["fwhm_v"] = -1e-4
+                    if tkt3["fw75%m_h"] == None: tkt3["fw75%m_h"] = -1e-4
+                    if tkt3["fw75%m_v"] == None: tkt3["fw75%m_v"] = -1e-4
+
+                    txt_all += "\n ==== %s ====\n\n"%(subtitle)
+                    txt_all += "\n\n"
+                    txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fw25%m_h"],1e4*tkt3["fw25%m_v"])
+                    txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fwhm_h"],  1e4*tkt3["fwhm_v"])
+                    txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fw75%m_h"],1e4*tkt3["fw75%m_v"])
+
+                    plot_index += 1
+                    file_png = "GRAPHICS/sw%s%0000d.png"%(png_label,plot_index)
+                    os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
+                    txt_all += "\n\n [%s] \n\n"%(file_png)
+
+                if write_html_report:
+                    if root_file != "0P":
+                        txt_latex += "%d  &  %s  & %d  & %d & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f %s%s \n"%(energy_kev,root_file,\
+                                            1e6*tkt0["fwhm_h"],1e6*tkt0["fwhm_v"],\
+                                            1e4*tkt1["fwhm_h"],1e4*tkt1["fwhm_v"],\
+                                            1e4*tkt2["fwhm_h"],1e4*tkt2["fwhm_v"],\
+                                            1e4*tkt3["fwhm_h"],1e4*tkt3["fwhm_v"],\
+                                            "\\","\\")
+            if write_html_report:
+                txt_latex += "\hline \n"
+
+        #
+        # dump html report and
+        #
+        #
+        #
+        # latex table
+        #
+        if write_html_report:
+            if use_emittance:
+                file_latex = dir_file_latex + "table2.txt"
             else:
-                title = "Zero Emittance; magnetic field: %s; E=%d keV"%(root_file,energy_kev)
-                png_label="_zeroemitt_"
+                file_latex = dir_file_latex + "table1.txt"
+
+            f = open(file_latex,"w")
+            f.write(txt_latex)
+            f.close()
+            print("File written to disk: %s"%(file_latex))
 
 
-            txt_all += "\n === %s ===\n\n"%(title)
-
-
-            #
-            # source
-            #
-
-            # preprocessor ["BM","3Pcut","2PAcut","2PBcut","1Pcut"]
-            if root_file == "BM":
-                pass
-            #
-            # first, only the short IDs
-            #
-            elif root_file == "1Pcut":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
-            elif root_file == "2PAcut":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=1,shift_x_flag=1)
-            elif root_file == "2PBcut":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=1,shift_x_flag=1)
-            elif root_file == "3Pcut":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=0,shift_x_flag=1)
-            #
-            # now, also with side BMs
-            #
-            elif root_file == "0P":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
-            elif root_file == "1P":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
-            elif root_file == "2PA":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
-
-            elif root_file == "2PB":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
-            elif root_file == "3P":
-                wiggler_preprocessor(e_min=e_min,e_max=e_max,file_field=file_field,dir_file_field=dir_file_field,
-                                     plot_trajectories=plot_trajectories,shift_betax_flag=4,shift_x_flag=4)
+            if use_emittance:
+                root_file_out = 'short_wigglers_with_emittance'
             else:
-                raise "Error: root_file not valid"
-
-            #shadow source
-            if root_file == "BM":
-                beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=emittance)
-            else:
-                beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=emittance)
-
-            tmp0 = oe0.sourcinfo()
-            # plot divergences
-            subtitle = "Divergence space"
-            tkt0 = Shadow.ShadowTools.plotxy_gnuplot(beam,4,6,xrange=[-0.003,0.003],yrange=[-250e-6,250e-6],nolost=1,
-                    ref="Yes",nbins=201,ps=1,viewer="ls ",title="Div space; Units: rad; "+subtitle,
-                    calculate_widths=2)
-            if tkt0["fw25%m_h"] == None: tkt0["fw25%m_h"] = -1e-4
-            if tkt0["fw25%m_v"] == None: tkt0["fw25%m_v"] = -1e-4
-            if tkt0["fwhm_h"] == None:   tkt0["fwhm_h"] = -1e-4
-            if tkt0["fwhm_v"] == None:   tkt0["fwhm_v"] = -1e-4
-            if tkt0["fw75%m_h"] == None: tkt0["fw75%m_h"] = -1e-4
-            if tkt0["fw75%m_v"] == None: tkt0["fw75%m_v"] = -1e-4
-
-            txt_all += "\n ==== %s ====\n\n"%(subtitle)
-            txt_all += "\n\n"
-            txt_all += " | FW25M  | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fw25%m_h"],1e6*tkt0["fw25%m_v"])
-            txt_all += " | FWHM   | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fwhm_h"],  1e6*tkt0["fwhm_v"])
-            txt_all += " | FW75M  | H: %6.3f urad | V: %6.3f urad \n"%(1e6*tkt0["fw75%m_h"],1e6*tkt0["fw75%m_v"])
-
-            plot_index += 1
-            file_png = "sw%s%0000d.png"%(png_label,plot_index)
-            os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
-            txt_all += "\n\n [%s] \n\n"%(file_png)
-
-            # plot top view
-            subtitle = "Emission intensity - electron trajectory (top view)"
-            txt_all += "\n ==== %s ====\n\n"%(subtitle)
-            txt_all += "\n\n"
-            Shadow.ShadowTools.plotxy_gnuplot(beam,2,1,nbins=201,ps=1,viewer="ls ",title="Units=cm; %s"%subtitle)
+                root_file_out = 'short_wigglers_no_emittance'
+            file_out = root_file_out+'.t2t'
+            f = open(file_out,"w")
+            f.write(txt_all)
+            f.close()
+            print("File written to disk: ",file_out)
+            os.system("./txt2tags -t html --toc --enum-title %s"%file_out)
 
 
-            plot_index += 1
-            file_png = "sw%s%0000d.png"%(png_label,plot_index)
-            os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
-            txt_all += "\n\n [%s] \n\n"%(file_png)
-
-
-            #
-            # ideal focusing
-            #
-
-            beam,oe1 = focusing_ideal(beam)
-
-            subtitle = "Ideal 1:1 focusing"
-
-            # plot divergences
-            # xrange=[-500e-4/4,500e-4/4],yrange=[-500e-4/16,500e-4/16]
-            tkt1 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3,xrange=xrange_1, yrange=yrange_1,
-                                                     nolost=1,ref="Yes",nbins=201,ps=1,viewer="ls ",
-                                                     title="Real space; Units=cm; %s"%subtitle,
-                                                     calculate_widths=2)
-            if tkt1["fw25%m_h"] == None: tkt1["fw25%m_h"] = -1e-4
-            if tkt1["fw25%m_v"] == None: tkt1["fw25%m_v"] = -1e-4
-            if tkt1["fwhm_h"] == None:   tkt1["fwhm_h"] = -1e-4
-            if tkt1["fwhm_v"] == None:   tkt1["fwhm_v"] = -1e-4
-            if tkt1["fw75%m_h"] == None: tkt1["fw75%m_h"] = -1e-4
-            if tkt1["fw75%m_v"] == None: tkt1["fw75%m_v"] = -1e-4
-
-
-            txt_all += "\n ==== %s ====\n\n"%(subtitle)
-            txt_all += "\n\n"
-            txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fw25%m_h"],1e4*tkt1["fw25%m_v"])
-            txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fwhm_h"],  1e4*tkt1["fwhm_v"])
-            txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt1["fw75%m_h"],1e4*tkt1["fw75%m_v"])
-
-            plot_index += 1
-            file_png = "sw%s%0000d.png"%(png_label,plot_index)
-            os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
-            txt_all += "\n\n [%s] \n\n"%(file_png)
-
-
-            #
-            # 1:1 focusing
-            #
-            beam = None
-            if root_file == "BM":
-                beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=emittance)
-            else:
-                beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=emittance)
-
-
-            beam,oe1 = focusing_mirror(beam,foc="1:1",grazing_theta_mrad=3.0)
-
-            subtitle = "Toroid 1:1 focusing"
-
-            tkt2 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3,xrange=xrange_1, yrange=yrange_1,
-                                                     nolost=1,ref="Yes",nbins=301,ps=1,viewer="ls ",
-                                                     title="Real space; Units=cm; %s"%subtitle,
-                                                     calculate_widths=2)
-            if tkt2["fw25%m_h"] == None: tkt2["fw25%m_h"] = -1e-4
-            if tkt2["fw25%m_v"] == None: tkt2["fw25%m_v"] = -1e-4
-            if tkt2["fwhm_h"]   == None: tkt2["fwhm_h"] = -1e-4
-            if tkt2["fwhm_v"]   == None: tkt2["fwhm_v"] = -1e-4
-            if tkt2["fw75%m_h"] == None: tkt2["fw75%m_h"] = -1e-4
-            if tkt2["fw75%m_v"] == None: tkt2["fw75%m_v"] = -1e-4
-
-            txt_all += "\n ==== %s ====\n\n"%(subtitle)
-            txt_all += "\n\n"
-            txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fw25%m_h"],1e4*tkt2["fw25%m_v"])
-            txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fwhm_h"],  1e4*tkt2["fwhm_v"])
-            txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt2["fw75%m_h"],1e4*tkt2["fw75%m_v"])
-
-            plot_index += 1
-            file_png = "sw%s%0000d.png"%(png_label,plot_index)
-            os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
-            txt_all += "\n\n [%s] \n\n"%(file_png)
-            #
-
-            #
-            # 3:1 focusing
-            #
-            beam = None
-            if root_file == "BM":
-                beam, oe0 = bm_source(e_min=e_min,e_max=e_max,emittance=emittance)
-            else:
-                beam, oe0 = wiggler_source(e_min=e_min,e_max=e_max,emittance=emittance)
-            beam,oe1 = focusing_mirror(beam,foc="3:1",grazing_theta_mrad=3.0)
-
-            subtitle = "Ellipsoid 3:1 focusing"
-            # xrange=[-500e-4/2,500e-4/2],yrange=[-500e-4/4,500e-4/4]
-            tkt3 = Shadow.ShadowTools.plotxy_gnuplot(beam,1,3, xrange=xrange_3, yrange=yrange_3,
-                                                     nolost=1,ref="Yes",nbins=151,ps=1,viewer="ls ",
-                                                     title="Real space; Units=cm; %s"%subtitle,
-                                                     calculate_widths=2)
-
-            if tkt3["fw25%m_h"] == None: tkt3["fw25%m_h"] = -1e-4
-            if tkt3["fw25%m_v"] == None: tkt3["fw25%m_v"] = -1e-4
-            if tkt3["fwhm_h"] == None:   tkt3["fwhm_h"] = -1e-4
-            if tkt3["fwhm_v"] == None:   tkt3["fwhm_v"] = -1e-4
-            if tkt3["fw75%m_h"] == None: tkt3["fw75%m_h"] = -1e-4
-            if tkt3["fw75%m_v"] == None: tkt3["fw75%m_v"] = -1e-4
-
-            txt_all += "\n ==== %s ====\n\n"%(subtitle)
-            txt_all += "\n\n"
-            txt_all += " | FW25M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fw25%m_h"],1e4*tkt3["fw25%m_v"])
-            txt_all += " | FWHM   | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fwhm_h"],  1e4*tkt3["fwhm_v"])
-            txt_all += " | FW75M  | H: %6.3f um | V: %6.3f um \n"%(1e4*tkt3["fw75%m_h"],1e4*tkt3["fw75%m_v"])
-
-            plot_index += 1
-            file_png = "sw%s%0000d.png"%(png_label,plot_index)
-            os.system("convert -rotate 90 plotxy.ps %s"%(file_png))
-            txt_all += "\n\n [%s] \n\n"%(file_png)
-
-            if root_file != "0P":
-                txt_latex += "%d  &  %s  & %d  & %d & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f %s%s \n"%(energy_kev,root_file,\
-                                    1e6*tkt0["fwhm_h"],1e6*tkt0["fwhm_v"],\
-                                    1e4*tkt1["fwhm_h"],1e4*tkt1["fwhm_v"],\
-                                    1e4*tkt2["fwhm_h"],1e4*tkt2["fwhm_v"],\
-                                    1e4*tkt3["fwhm_h"],1e4*tkt3["fwhm_v"],\
-                                    "\\","\\")
-        txt_latex += "\hline \n"
-
-    #
-    # dump results
-    #
-    if emittance:
-        file_latex = "/users/srio/Working/rt/ESRF-new-lattice/REPORT-SHORT-WIGGLERS/table2.txt"
-    else:
-        file_latex = "/users/srio/Working/rt/ESRF-new-lattice/REPORT-SHORT-WIGGLERS/table1.txt"
-
-    f = open(file_latex,"w")
-    f.write(txt_latex)
-    f.close()
-    print("File written to disk: %s"%(file_latex))
-
-
-    if emittance:
-        root_file_out = 'short_wigglers_with_emittance'
-    else:
-        root_file_out = 'short_wigglers_no_emittance'
-
-    file_out = root_file_out+'.t2t'
-    f = open(file_out,"w")
-    f.write(txt_all)
-    f.close()
-    print("File written to disk: ",file_out)
-
-    os.system("./txt2tags -t html --toc --enum-title %s"%file_out)
     print("All done.")
-    print(tmp0)
 
-    # if plot_trajectories: plt.show()
-    #os.system("open %s.html"%root_file_out)
 
 
 
