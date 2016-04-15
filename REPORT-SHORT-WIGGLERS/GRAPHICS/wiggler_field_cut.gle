@@ -1,0 +1,76 @@
+! gle graphic, customized srio@esrf.eu 20130131
+!
+! global settings
+!
+!size 21.0 29.7               ! size of paper A4 (in cm)
+!amove 1 7                    ! origin of graph in paper coordinates
+
+size 18 12             !Sets the size of the graph in cm
+set font texcmr hei 0.75      ! font "computer modern roman" size
+
+!
+! define colors
+!
+
+       c3$ = "green"
+       c21$ = "cyan"
+       c22$ = "blue"
+       c1$ = "red"
+
+!
+! create graph
+!
+begin graph
+        !math                  ! axes in the center
+        scale auto
+        size 18 12             !Sets the size of the graph in cm
+        !
+        ! titles
+        !
+        xtitle "s [m]"
+        ytitle "B [T]"
+
+
+        xaxis min -.075 max .075  dticks 0.05 dsubticks 0.01
+        yaxis min -1 max 1 dticks 0.5 dsubticks 0.1
+        !
+        ! plot data
+        !
+        data ../../SW_3Pcut.txt  d3=c1,c2 
+        data ../../SW_2PAcut.txt d21=c1,c2 
+        data ../../SW_2PBcut.txt d22=c1,c2 
+        data ../../SW_1Pcut.txt  d1=c1,c2 
+
+        d3   line color c3$ 
+        d21  line color c21$ 
+        d22  line color c22$ 
+        d1   line color c1$ 
+end graph                               
+
+!
+! legend
+!
+set font texcmr hei 0.5      ! font "computer modern roman" size
+begin key
+   nobox
+   pos tl
+   line color c3$ text "3Pcut"
+   line color c21$ text "2PAcut"
+   line color c22$ text "2PBcut"
+   line color c1$ text "1Pcut"
+
+end key
+
+! draw label at any point (graph coordinates)
+!set just cc
+!amove xg(0.25) yg(0.5)
+!tex "$\displaystyle\log a = \int_{1}^{a}{\textstyle \frac{1}{x}\,dx}$"
+
+!amove xg(263.5) yg(-4) 
+!aline xg(263.5) yg(8) !arrow end
+!amove xg(264) yg(4) 
+!tex "hello"
+
+
+
+

@@ -1,0 +1,68 @@
+! gle graphic, customized srio@esrf.eu 20130131
+!
+! global settings
+!
+!size 21.0 29.7               ! size of paper A4 (in cm)
+!amove 1 7                    ! origin of graph in paper coordinates
+
+size 18 12             !Sets the size of the graph in cm
+set font texcmr hei 0.75      ! font "computer modern roman" size
+
+!
+! define colors
+!
+
+       c3$ = "green"
+       c21$ = "cyan"
+       c22$ = "blue"
+       c1$ = "red"
+       c4$ = "pink"
+
+!
+! create graph
+!
+begin graph
+        !math                  ! axes in the center
+        scale auto
+        size 18 12             !Sets the size of the graph in cm
+        !
+        ! titles
+        !
+        xtitle "x [\mu m]"
+        ytitle "x' [\mu rad]"
+
+
+        xaxis min -100 max 100  dticks 25 dsubticks 5
+        yaxis min -100 max 100  dticks 25 dsubticks 5
+        !
+        ! plot data
+        !
+        data scatter.txt  d1=c1,c2 
+
+        d1   marker fcircle msize 0.05  color red
+end graph                               
+
+!
+! legend
+!
+!set font texcmr hei 0.5      ! font "computer modern roman" size
+!begin key
+!   nobox
+!   pos tl
+!   line color c3$ text "3P"
+!
+!end key
+
+! draw label at any point (graph coordinates)
+!set just cc
+!amove xg(0.25) yg(0.5)
+!tex "$\displaystyle\log a = \int_{1}^{a}{\textstyle \frac{1}{x}\,dx}$"
+
+!amove xg(263.5) yg(-4) 
+!aline xg(263.5) yg(8) !arrow end
+!amove xg(264) yg(4) 
+!tex "hello"
+
+
+
+
