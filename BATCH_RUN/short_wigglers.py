@@ -95,7 +95,7 @@ def wiggler_source(ener_gev=6.0,e_min=5000.0,e_max=5005.0,iwrite=0,emittance=0):
     oe0.IDO_Z_S = 0
     oe0.ISTAR1 = 5676561
     oe0.NCOL = 0
-    oe0.NPOINT = 20000
+    oe0.NPOINT = 100000
     oe0.NTOTALPOINT = 0
     oe0.N_COLOR = 0
     oe0.PH1 = e_min
@@ -180,7 +180,7 @@ def bm_source(ener_gev=6.0,e_min=5000.0,e_max=5005.0,iwrite=0,emittance=0):
     oe0.SIGDIX = 0.0
     oe0.SIGDIZ = 0.0
 
-    oe0.NPOINT = 20000
+    oe0.NPOINT = 100000
     oe0.SIGMAY = 0.0
     oe0.VDIV1 = 1.0
     oe0.VDIV2 = 1.0
